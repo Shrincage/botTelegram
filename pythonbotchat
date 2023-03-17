@@ -1,0 +1,69 @@
+import telebot
+import random
+import requests
+
+
+token = "YOUR_TOKEN"
+bot = telebot.TeleBot(token)
+
+predictions = ["Сегодня чисто твой день, раскумарься от души.",
+"Ты добьешь успеха в делах, которые тебе важны.",
+"Красота не покидает своего хозяина. Ты находишься в отличной форме!",
+"От души душевно в душу пройдет твой день, если не будешь втыкать.", "Пора действовать, выпей пивка с братками",
+"Лучшее время, чтобы положить это печенье на место", "Сделай задуманное сегодня, либо завтра будет незаконно!",
+"Ты увидишь ответ на свой вопрос на дне 10-й выпитой тобой рюмки водки.", "Иди работать! Иначе жить тебе в нищете…",
+"Хотите узнать будущее? Отправьте 10byn на номер 375297763619", "Что-то я сегодня не в духе, спроси у другого печенья.",
+"Вам говорить следующий тост.", "Вы проснетесь от поцелуя и аромата кофе",
+"Это послание из другой галактики самому доброму человеку. Миссия завершена успешно!",
+"Вам стоит немного подождать, и будущее принесет вам большую радость.",
+"Завтра ты будешь чистить зубы", "Тебя ждёт новое знакомство", "Когда ты вырастешь – будешь директором кондитерской фабрики",
+"Ты уникален, так же, как и все остальные."]
+
+# Обработчик старта ебана
+@bot.message_handler(commands=['start'])
+def welcome(message):
+    bot.reply_to(message, "Привет! Я Бот Мойра! Напиши /help для получения команд")
+
+# Команда хелп
+@bot.message_handler(commands=['help'])
+def help(message):
+    bot.reply_to(message, "Напиши /predict, чтобы получить предсказание, /cat, чтобы получить случайное фото котика, /dog, чтобы получить случайное фото песика, /translate TEXT, чтоб использовать переводчика ")
+
+
+
+# Обработчик текста
+@bot.message_handler(commands=['predict'])
+def predict(message):
+    prediction = random.choice(predictions)
+    bot.send_message(message.chat.id, prediction)
+# Собачки
+@bot.message_handler(commands=['dog'])
+def dog(message):
+    response = requests.get('https://dog.ceo/api/breeds/image/random')
+    data = response.json()
+    dog_url = data['message']
+    bot.send_photo(message.chat.id, dog_url)
+
+# Cat
+@bot.message_handler(commands=['cat'])
+def cat(message):
+    response = requests.get('https://api.thecatapi.com/v1/images/search')
+    data = response.json()
+    cat_url = data[0]['url']
+    bot.send_photo(message.chat.id, cat_url)
+# translate
+@bot.message_handler(commands=['translate'])
+def translate(message):
+    try:
+        text = message.text.split()
+        text = ' '.join(text)
+        src_lang = 'auto'
+        dest_lang = 'ru'
+        url = f'https://translate.googleapis.com/translate_a/single?client=gtx&sl={src_lang}&tl={dest_lang}&dt=t&q={text}'
+        response = requests.get(url)
+        data = response.text.split('"')[1]
+        bot.send_message(message.chat.id, data)
+    except:
+        bot.send_message(message.chat.id, 'Не удалось перевести текст')
+# Пуск
+bot.polling(none_stop=True)
